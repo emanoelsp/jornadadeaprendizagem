@@ -201,32 +201,46 @@ function LoginScreen({
 }: {
   onAuthenticated: (session: SessionUser) => void;
 }) {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [role, setRole] = useState<UserRole>("gestor");
-  const [name, setName] = useState("Coordenacao ADS");
-  const [email, setEmail] = useState("gestor@unisenai.local");
-  const [password, setPassword] = useState("enade2026");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const firebaseReady = isFirebaseConfigured();
 
-  async function authenticate(mode: "signin" | "signup" | "demo") {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setIsSubmitting(true);
     setMessage("");
 
+    if (isSignUp && password !== confirmPassword) {
+      setMessage("As senhas nao coincidem.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isSignUp && password.length < 6) {
+      setMessage("A senha deve ter pelo menos 6 caracteres.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      if (mode === "demo" || !firebaseReady) {
-        onAuthenticated({ role, name, email, demo: true });
+      if (!firebaseReady) {
+        onAuthenticated({ role, name: name || "Usuario", email, demo: true });
         return;
       }
 
-      const user =
-        mode === "signup"
-          ? await createPasswordAccount(email, password)
-          : await signInWithPassword(email, password);
+      const user = isSignUp
+        ? await createPasswordAccount(email, password)
+        : await signInWithPassword(email, password);
 
       onAuthenticated({
         role,
-        name: user.displayName ?? name,
+        name: user.displayName ?? (name || "Usuario"),
         email: user.email ?? email,
         demo: false,
       });
@@ -251,7 +265,7 @@ function LoginScreen({
 
       onAuthenticated({
         role,
-        name: user.displayName ?? name,
+        name: user.displayName ?? (name || "Usuario"),
         email: user.email ?? email,
         demo: false,
       });
@@ -262,6 +276,17 @@ function LoginScreen({
     }
   }
 
+  function handleDemo() {
+    onAuthenticated({ role, name: name || "Usuario Demo", email: email || "demo@local", demo: true });
+  }
+
+  function switchMode() {
+    setIsSignUp(!isSignUp);
+    setMessage("");
+    setPassword("");
+    setConfirmPassword("");
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -269,91 +294,128 @@ function LoginScreen({
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <GraduationCap className="h-6 w-6" />
           </div>
-          <CardTitle className="text-xl">Preparatorio ENADE 2026</CardTitle>
+          <CardTitle className="text-xl">
+            {isSignUp ? "Criar Conta" : "Entrar"}
+          </CardTitle>
           <CardDescription>
-            Sistema de diagnostico e jornada de aprendizagem
+            {isSignUp
+              ? "Preencha os dados para criar sua conta"
+              : "Sistema de diagnostico e jornada de aprendizagem"}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 rounded-lg border p-1">
-            <Button
-              onClick={() => {
-                setRole("gestor");
-                setName("Coordenacao ADS");
-                setEmail("gestor@unisenai.local");
-              }}
-              type="button"
-              variant={role === "gestor" ? "default" : "ghost"}
-              size="sm"
-            >
-              <Users className="h-4 w-4" aria-hidden="true" />
-              Gestor
-            </Button>
-            <Button
-              onClick={() => {
-                setRole("aluno");
-                setName("Estudante");
-                setEmail("aluno@unisenai.local");
-              }}
-              type="button"
-              variant={role === "aluno" ? "default" : "ghost"}
-              size="sm"
-            >
-              <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Aluno
-            </Button>
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-2 rounded-lg border p-1">
+              <Button
+                onClick={() => setRole("gestor")}
+                type="button"
+                variant={role === "gestor" ? "default" : "ghost"}
+                size="sm"
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
+                Gestor
+              </Button>
+              <Button
+                onClick={() => setRole("aluno")}
+                type="button"
+                variant={role === "aluno" ? "default" : "ghost"}
+                size="sm"
+              >
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                Aluno
+              </Button>
+            </div>
 
-          <div className="space-y-3">
-            <Input
-              placeholder="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Input
-              placeholder="E-mail"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <Input
-              placeholder="Senha"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+            <div className="space-y-3">
+              {isSignUp && (
+                <Input
+                  placeholder="Nome completo"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              )}
+              <Input
+                placeholder="E-mail"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Input
+                placeholder="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              {isSignUp && (
+                <Input
+                  placeholder="Confirmar senha"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              )}
+            </div>
 
-          {message && <p className="text-sm text-destructive">{message}</p>}
+            {message && <p className="text-sm text-destructive">{message}</p>}
 
-          {!firebaseReady && (
-            <p className="text-xs text-muted-foreground">
-              Configure NEXT_PUBLIC_FIREBASE_* para autenticar via Firebase.
-            </p>
-          )}
+            {!firebaseReady && (
+              <p className="text-xs text-muted-foreground">
+                Configure NEXT_PUBLIC_FIREBASE_* para autenticar via Firebase.
+              </p>
+            )}
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button disabled={isSubmitting} onClick={() => authenticate("signin")}>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               <Lock className="h-4 w-4" aria-hidden="true" />
-              Entrar
+              {isSignUp ? "Criar conta" : "Entrar"}
             </Button>
+
+            {!isSignUp && (
+              <Button
+                type="button"
+                disabled={isSubmitting || !firebaseReady}
+                onClick={authenticateWithGoogle}
+                variant="outline"
+                className="w-full"
+              >
+                <Mail className="h-4 w-4" aria-hidden="true" />
+                Entrar com Google
+              </Button>
+            )}
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">ou</span>
+              </div>
+            </div>
+
             <Button
-              disabled={isSubmitting || !firebaseReady}
-              onClick={authenticateWithGoogle}
-              variant="outline"
+              type="button"
+              className="w-full"
+              disabled={isSubmitting}
+              onClick={handleDemo}
+              variant="ghost"
             >
-              <Mail className="h-4 w-4" aria-hidden="true" />
-              Gmail
+              Modo Demonstracao
             </Button>
-          </div>
-          <Button
-            className="w-full"
-            disabled={isSubmitting}
-            onClick={() => authenticate("demo")}
-            variant="ghost"
-          >
-            Modo Demonstracao
-          </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              {isSignUp ? "Ja tem uma conta?" : "Nao tem uma conta?"}{" "}
+              <button
+                type="button"
+                onClick={switchMode}
+                className="font-medium text-primary hover:underline"
+              >
+                {isSignUp ? "Entrar" : "Criar conta"}
+              </button>
+            </p>
+          </form>
         </CardContent>
       </Card>
     </main>
