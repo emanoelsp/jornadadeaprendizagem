@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FirebaseError } from "firebase/app";
 import {
   AlertTriangle,
@@ -40,9 +40,11 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 import {
+  completeGoogleRedirect,
   createPasswordAccount,
   logoutFirebaseUser,
   signInWithGooglePopup,
+  startGoogleRedirect,
   signInWithPassword,
 } from "@/lib/firebase/auth-service";
 import {
@@ -222,6 +224,47 @@ function LoginScreen({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const firebaseReady = isFirebaseConfigured();
 
+  useEffect(() => {
+    if (!firebaseReady) return;
+
+    let active = true;
+    void (async () => {
+      try {
+        console.info("[auth] complete redirect start", {
+          origin: window.location.origin,
+          href: window.location.href,
+        });
+        const user = await completeGoogleRedirect();
+        console.info("[auth] complete redirect result", {
+          hasUser: Boolean(user),
+          email: user?.email,
+          uid: user?.uid,
+        });
+        if (!active || !user) return;
+
+        onAuthenticated({
+          role,
+          name: user.displayName ?? "Usuario",
+          email: user.email ?? "",
+          demo: false,
+          className: role === "aluno" ? selectedClass : undefined,
+        });
+      } catch (error) {
+        if (!active) return;
+        console.error("[auth] complete redirect error", error);
+        if (error instanceof FirebaseError) {
+          setMessage(`${error.message} (${error.code})`);
+          return;
+        }
+        setMessage(error instanceof Error ? error.message : "Erro ao finalizar login Google.");
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [firebaseReady, onAuthenticated, role, selectedClass]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
@@ -285,8 +328,35 @@ function LoginScreen({
         return;
       }
 
-      const user = await signInWithGooglePopup();
+      console.info("[auth] google login start", {
+        origin: window.location.origin,
+        href: window.location.href,
+      });
+      // Em alguns navegadores (especialmente Safari/ITP), o popup pode ficar preso no __/auth/handler.
+      // Por isso: tenta popup primeiro e, se falhar/bloquear, usa redirect.
+      let user = await signInWithGooglePopup().catch((error) => {
+        console.error("[auth] google popup error", error);
+        if (error instanceof FirebaseError) {
+          const shouldRedirect = [
+            "auth/popup-blocked",
+            "auth/popup-closed-by-user",
+            "auth/cancelled-popup-request",
+          ].includes(error.code);
+          if (shouldRedirect) return null;
+        }
+        throw error;
+      });
 
+      if (!user) {
+        console.info("[auth] switching to redirect flow");
+        await startGoogleRedirect();
+        return;
+      }
+
+      console.info("[auth] google popup success", {
+        email: user.email,
+        uid: user.uid,
+      });
       onAuthenticated({
         role,
         name: user.displayName ?? (name || "Usuario"),
@@ -295,7 +365,22 @@ function LoginScreen({
         className: role === "aluno" ? selectedClass : undefined,
       });
     } catch (error) {
+      console.error("[auth] google login fatal error", error);
       if (error instanceof FirebaseError) {
+        if (error.code === "auth/unauthorized-domain") {
+          setMessage(
+            "Domínio não autorizado no Firebase Auth. Se você estiver acessando por IP (ex.: 10.1.17.103:3000), adicione esse domínio/host nos domínios autorizados do Firebase. (auth/unauthorized-domain)",
+          );
+          return;
+        }
+
+        if (error.code === "auth/popup-blocked") {
+          setMessage(
+            "Popup bloqueado pelo navegador. Vou usar o modo Redirect (mais confiável). Tente novamente. (auth/popup-blocked)",
+          );
+          return;
+        }
+
         setMessage(`${error.message} (${error.code})`);
         return;
       }

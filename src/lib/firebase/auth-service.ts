@@ -4,7 +4,9 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
+  getRedirectResult,
   type User,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
@@ -42,27 +44,29 @@ export async function signInWithGooglePopup() {
     const credential = await signInWithPopup(requireAuth(), provider);
     return credential.user;
   } catch (error) {
-    if (error instanceof FirebaseError && error.code === "auth/popup-closed-by-user") {
-      throw new Error(
-        "Login cancelado: a janela do Google foi fechada. Se seu navegador estiver bloqueando popups (ou Safari/aba anônima), permita popups e tente novamente.",
-      );
-    }
-
-    if (error instanceof FirebaseError && error.code === "auth/popup-blocked") {
-      throw new Error(
-        "Popup bloqueado pelo navegador. Permita popups para este site e tente novamente.",
-      );
-    }
-
-    if (error instanceof FirebaseError && error.code === "auth/unauthorized-domain") {
-      throw new Error(
-        "Domínio não autorizado no Firebase Auth. Verifique os domínios autorizados (ex.: localhost:3000 e seu domínio da Vercel).",
-      );
-    }
-
+    // Importante: não "embrulhar" FirebaseError em Error comum.
+    // Precisamos preservar `error.code` para o frontend decidir fallback (popup -> redirect)
+    // e para diagnosticar corretamente (unauthorized-domain, popup-blocked, etc).
     throw error;
   }
 
+}
+
+export async function startGoogleRedirect() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: "select_account",
+  });
+
+  await signInWithRedirect(requireAuth(), provider);
+}
+
+export async function completeGoogleRedirect() {
+  const auth = getFirebaseAuth();
+  if (!auth) return null;
+
+  const result = await getRedirectResult(auth);
+  return result?.user ?? null;
 }
 
 export async function logoutFirebaseUser() {
