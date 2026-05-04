@@ -4,42 +4,20 @@ import {
   riskFromAccuracy,
 } from "./analytics";
 import {
-  defaultJourneys,
-  getAverageQuestionAccuracy,
   getCompetencyTitle,
-  getHighRiskUnits,
   getUnitName,
-  initialClassDiagnostics,
   questionBank,
   questionMappings,
 } from "./data";
 import { examQuestionsToQuestionBankItems, parseDetailedExamText } from "./exam-parser";
 
 describe("ENADE preparation data", () => {
-  it("calculates the mapped question average accuracy", () => {
-    expect(getAverageQuestionAccuracy()).toBe(61);
-  });
-
-  it("returns only high risk curricular units", () => {
-    expect(getHighRiskUnits()).toHaveLength(3);
-    expect(getHighRiskUnits().every((unit) => unit.risk === "alto")).toBe(true);
-  });
-
   it("keeps question mappings linked to known labels", () => {
     const criticalQuestion = questionMappings.find((question) => question.id === "Q24");
 
     expect(criticalQuestion).toBeDefined();
     expect(getCompetencyTitle("C2")).toContain("Arquitetura");
     expect(getUnitName("EDA")).toBe("Estruturas de Dados");
-  });
-
-  it("builds diagnostics per class with relevant visual metrics", () => {
-    const ads3 = initialClassDiagnostics.find((diagnostic) => diagnostic.className === "ADS 3A");
-
-    expect(ads3).toBeDefined();
-    expect(ads3?.totalStudents).toBe(5);
-    expect(ads3?.highRiskQuestionCount).toBeGreaterThan(0);
-    expect(ads3?.topProblemQuestionIds).toContain("Q24");
   });
 
   it("generates a three-macro learning journey from selected questions", () => {
@@ -52,10 +30,6 @@ describe("ENADE preparation data", () => {
       "simulado",
     ]);
     expect(journey.questionIds).toEqual(["Q24", "Q21"]);
-  });
-
-  it("keeps default journeys ready for every sample class", () => {
-    expect(defaultJourneys.map((journey) => journey.className)).toEqual(["ADS 3A", "ADS 4A"]);
   });
 
   it("normalizes risk and percentage calculations", () => {

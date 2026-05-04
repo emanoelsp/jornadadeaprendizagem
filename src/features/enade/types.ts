@@ -15,9 +15,6 @@ export type CurricularUnit = {
   module: "Específico I" | "Específico II";
   workload: number;
   competencyId: CompetencyId;
-  mappedQuestions: number;
-  averageAccuracy: number;
-  risk: RiskLevel;
 };
 
 export type EnadeCompetency = {
@@ -34,7 +31,6 @@ export type QuestionMapping = {
   object: string;
   competencyId: CompetencyId;
   unitCodes: string[];
-  averageAccuracy: number;
   difficulty: RiskLevel;
   status: "mapeada" | "revisao_docente";
 };

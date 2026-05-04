@@ -1,16 +1,12 @@
 import type {
-  AssessmentResponse,
-  ClassDiagnostic,
   CurricularUnit,
   EnadeCompetency,
-  LearningJourney,
   PedagogicalAction,
   QuestionBankItem,
   QuestionMapping,
-  StudentPreparationPlan,
 } from "./types";
-import { buildDiagnosticsByClass } from "./analytics";
 
+// Competências ENADE - dados oficiais da portaria
 export const enadeCompetencies: EnadeCompetency[] = [
   {
     id: "C1",
@@ -36,6 +32,7 @@ export const enadeCompetencies: EnadeCompetency[] = [
   },
 ];
 
+// Unidades curriculares do PPC
 export const curricularUnits: CurricularUnit[] = [
   {
     code: "AMS",
@@ -44,9 +41,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico I",
     workload: 108,
     competencyId: "C1",
-    mappedQuestions: 7,
-    averageAccuracy: 58,
-    risk: "medio",
   },
   {
     code: "EDA",
@@ -55,9 +49,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico I",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 6,
-    averageAccuracy: 49,
-    risk: "alto",
   },
   {
     code: "DWE",
@@ -66,9 +57,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico I",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 5,
-    averageAccuracy: 63,
-    risk: "medio",
   },
   {
     code: "IHC",
@@ -77,9 +65,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico I",
     workload: 36,
     competencyId: "C1",
-    mappedQuestions: 3,
-    averageAccuracy: 72,
-    risk: "baixo",
   },
   {
     code: "TRL",
@@ -88,9 +73,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico I",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 4,
-    averageAccuracy: 54,
-    risk: "alto",
   },
   {
     code: "CNU",
@@ -99,9 +81,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico II",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 4,
-    averageAccuracy: 59,
-    risk: "medio",
   },
   {
     code: "DSW",
@@ -110,9 +89,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico II",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 5,
-    averageAccuracy: 67,
-    risk: "medio",
   },
   {
     code: "DSD",
@@ -121,9 +97,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico II",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 4,
-    averageAccuracy: 52,
-    risk: "alto",
   },
   {
     code: "DSM",
@@ -132,9 +105,6 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico II",
     workload: 72,
     competencyId: "C2",
-    mappedQuestions: 3,
-    averageAccuracy: 65,
-    risk: "medio",
   },
   {
     code: "GAP",
@@ -143,12 +113,10 @@ export const curricularUnits: CurricularUnit[] = [
     module: "Específico II",
     workload: 36,
     competencyId: "C1",
-    mappedQuestions: 4,
-    averageAccuracy: 66,
-    risk: "medio",
   },
 ];
 
+// Mapeamento de questões ENADE anterior (referência para análise)
 export const questionMappings: QuestionMapping[] = [
   {
     id: "Q09",
@@ -157,7 +125,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Engenharia de requisitos e análise de sistemas",
     competencyId: "C1",
     unitCodes: ["AMS", "GAP"],
-    averageAccuracy: 72,
     difficulty: "baixo",
     status: "mapeada",
   },
@@ -168,7 +135,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Banco de dados e modelagem de dados",
     competencyId: "C2",
     unitCodes: ["DSW", "DWE"],
-    averageAccuracy: 66,
     difficulty: "medio",
     status: "mapeada",
   },
@@ -179,7 +145,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Arquitetura de software",
     competencyId: "C2",
     unitCodes: ["AMS", "DSD"],
-    averageAccuracy: 58,
     difficulty: "medio",
     status: "mapeada",
   },
@@ -190,7 +155,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Redes, sistemas distribuídos e segurança",
     competencyId: "C2",
     unitCodes: ["TRL", "DSD", "CNU"],
-    averageAccuracy: 54,
     difficulty: "alto",
     status: "revisao_docente",
   },
@@ -201,7 +165,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Estruturas de dados e lógica computacional",
     competencyId: "C2",
     unitCodes: ["EDA"],
-    averageAccuracy: 49,
     difficulty: "alto",
     status: "mapeada",
   },
@@ -212,7 +175,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Processo de software e qualidade",
     competencyId: "C1",
     unitCodes: ["AMS", "GAP"],
-    averageAccuracy: 63,
     difficulty: "medio",
     status: "mapeada",
   },
@@ -223,7 +185,6 @@ export const questionMappings: QuestionMapping[] = [
     object: "Interação humano-computador",
     competencyId: "C1",
     unitCodes: ["IHC"],
-    averageAccuracy: 59,
     difficulty: "medio",
     status: "mapeada",
   },
@@ -234,12 +195,12 @@ export const questionMappings: QuestionMapping[] = [
     object: "Solução interdisciplinar em desenvolvimento de sistemas",
     competencyId: "C2",
     unitCodes: ["DWE", "DSW", "DSD"],
-    averageAccuracy: 67,
     difficulty: "medio",
     status: "revisao_docente",
   },
 ];
 
+// Banco de questões base (questões podem ser adicionadas via upload)
 export const questionBank: QuestionBankItem[] = [
   {
     id: "Q09",
@@ -444,109 +405,7 @@ export const questionBank: QuestionBankItem[] = [
   },
 ];
 
-const sampleStudentsByClass = {
-  "ADS 3A": ["Ana Souza", "Bruno Lima", "Carla Dias", "Diego Martins", "Eva Rocha"],
-  "ADS 4A": [
-    "Felipe Costa",
-    "Giulia Alves",
-    "Helena Nunes",
-    "Igor Prado",
-    "Julia Moraes",
-    "Kaique Silva",
-  ],
-};
-
-const correctnessByClass: Record<string, Record<string, boolean[]>> = {
-  "ADS 3A": {
-    Q09: [true, true, true, true, false],
-    Q13: [true, true, true, false, false],
-    Q17: [true, true, false, false, false],
-    Q21: [true, false, false, true, false],
-    Q24: [true, false, false, false, false],
-    Q28: [true, true, true, false, false],
-    Q32: [true, true, true, true, false],
-    D3: [true, true, false, true, false],
-  },
-  "ADS 4A": {
-    Q09: [true, true, true, true, true, false],
-    Q13: [true, true, true, true, false, false],
-    Q17: [true, true, true, false, true, false],
-    Q21: [true, true, false, false, true, false],
-    Q24: [true, true, false, false, false, false],
-    Q28: [true, true, true, true, false, true],
-    Q32: [true, true, true, true, true, false],
-    D3: [true, true, false, true, false, true],
-  },
-};
-
-function wrongOption(correctOption: string) {
-  return correctOption === "A" ? "B" : "A";
-}
-
-export const sampleResponses: AssessmentResponse[] = Object.entries(sampleStudentsByClass)
-  .flatMap(([className, students]) =>
-    students.flatMap((studentName, studentIndex) =>
-      questionBank.map((question) => {
-        const isCorrect = Boolean(correctnessByClass[className]?.[question.id]?.[studentIndex]);
-
-        return {
-          id: `${className}-${studentName}-${question.id}`.replace(/\W+/g, "-"),
-          className,
-          studentName,
-          questionId: question.id,
-          selectedOption: isCorrect ? question.correctOption : wrongOption(question.correctOption),
-          correctOption: question.correctOption,
-          score: isCorrect ? 1 : 0,
-          answeredAt: "2026-05-04T12:00:00.000Z",
-        };
-      }),
-    ),
-  );
-
-export const initialClassDiagnostics: ClassDiagnostic[] = buildDiagnosticsByClass(
-  sampleResponses,
-  questionBank,
-);
-
-export const defaultJourneys: LearningJourney[] = initialClassDiagnostics.map((diagnostic) => {
-  const selectedQuestionIds = diagnostic.topProblemQuestionIds.slice(0, 4);
-
-  return {
-    id: `jornada-${diagnostic.className.toLowerCase().replace(/\W+/g, "-")}`,
-    className: diagnostic.className,
-    title: `Jornada ENADE ${diagnostic.className}`,
-    description:
-      "Exploração guiada, flashcards com memória espaçada e novo simulado preparatório.",
-    questionIds: selectedQuestionIds,
-    macros: [
-      {
-        id: "exploracao",
-        title: "Exploração das questões críticas",
-        subtitle: "Tour guiado com índices de acerto e maiores problemas da turma.",
-        weekLabel: "Macro semana 1",
-        questionIds: selectedQuestionIds,
-      },
-      {
-        id: "flashcards",
-        title: "Flashcards de aprendizagem",
-        subtitle: "Marca como aprendido ou volta para a fila de memória espaçada.",
-        weekLabel: "Macro semana 2",
-        questionIds: selectedQuestionIds,
-      },
-      {
-        id: "simulado",
-        title: "Novo simulado preparatório",
-        subtitle: "Conclui a jornada usando as questões escolhidas pelo gestor.",
-        weekLabel: "Macro semana 3",
-        questionIds: selectedQuestionIds,
-      },
-    ],
-    createdAt: "2026-05-04T12:00:00.000Z",
-    updatedAt: "2026-05-04T12:00:00.000Z",
-    status: "publicada",
-  };
-});
-
+// Ações pedagógicas planejadas
 export const pedagogicalActions: PedagogicalAction[] = [
   {
     id: "AP01",
@@ -600,97 +459,11 @@ export const pedagogicalActions: PedagogicalAction[] = [
   },
 ];
 
-export const studentPreparationPlan: StudentPreparationPlan = {
-  studentName: "Estudante ADS",
-  cohort: "4º semestre - Campus Blumenau",
-  courseProgress: 78,
-  readiness: 68,
-  averageAccuracy: 64,
-  targetAccuracy: 78,
-  strengths: [
-    "Interpretação de requisitos e regras de negócio",
-    "Desenvolvimento web e integração com dados",
-    "Usabilidade e avaliação de interface",
-  ],
-  priorityGaps: [
-    "Estruturas de dados em cenários aplicados",
-    "Redes, nuvem e sistemas distribuídos",
-    "Justificativa técnica em respostas discursivas",
-  ],
-  studyTasks: [
-    {
-      id: "EA01",
-      title: "Resolver questões Q21 e Q24 com correção comentada",
-      duration: "45 min",
-      priority: "alta",
-      unitCode: "EDA",
-      competencyId: "C2",
-    },
-    {
-      id: "EA02",
-      title: "Revisar arquitetura cliente/servidor, nuvem e segurança",
-      duration: "50 min",
-      priority: "alta",
-      unitCode: "DSD",
-      competencyId: "C2",
-    },
-    {
-      id: "EA03",
-      title: "Produzir uma resposta discursiva com checklist ENADE",
-      duration: "35 min",
-      priority: "media",
-      unitCode: "DSW",
-      competencyId: "C2",
-    },
-  ],
-  recommendedQuestionIds: ["Q21", "Q24", "D3"],
-};
-
-export const managerMetrics = {
-  eligibleStudents: 48,
-  targetCohorts: "3º e 4º semestres",
-  mappedQuestions: 35,
-  averageAccuracy: 61,
-  criticalGaps: 3,
-  plannedActions: pedagogicalActions.length,
-};
-
-export const preparationStages = [
-  {
-    title: "Simulado inicial",
-    description: "Aplicar prova anterior do ENADE para obter diagnóstico real por estudante.",
-    status: "Concluído",
-  },
-  {
-    title: "Mapeamento técnico",
-    description: "Associar questão, objeto de conhecimento, competência e unidade curricular.",
-    status: "Em andamento",
-  },
-  {
-    title: "Mapa de lacunas",
-    description: "Identificar turmas, UCs e competências com menor desempenho.",
-    status: "Em andamento",
-  },
-  {
-    title: "Ações pedagógicas",
-    description: "Planejar oficinas, listas orientadas e revisões com docentes responsáveis.",
-    status: "Planejado",
-  },
-];
-
-export function getAverageQuestionAccuracy() {
-  const total = questionMappings.reduce((sum, question) => sum + question.averageAccuracy, 0);
-  return Math.round(total / questionMappings.length);
-}
-
-export function getHighRiskUnits() {
-  return curricularUnits.filter((unit) => unit.risk === "alto");
-}
-
+// Funções auxiliares
 export function getCompetencyTitle(competencyId: "C1" | "C2") {
-  return enadeCompetencies.find((competency) => competency.id === competencyId)?.title ?? competencyId;
+  return enadeCompetencies.find((c) => c.id === competencyId)?.title ?? competencyId;
 }
 
 export function getUnitName(unitCode: string) {
-  return curricularUnits.find((unit) => unit.code === unitCode)?.name ?? unitCode;
+  return curricularUnits.find((u) => u.code === unitCode)?.name ?? unitCode;
 }
