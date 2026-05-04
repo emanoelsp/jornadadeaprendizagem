@@ -3,16 +3,13 @@
 import { useMemo, useState } from "react";
 import {
   AlertTriangle,
-  ArrowRight,
   BarChart3,
   BookOpen,
   CalendarDays,
   CheckCircle2,
-  ClipboardList,
   GraduationCap,
   LineChart,
   ListChecks,
-  MapPinned,
   Target,
   Users,
   type LucideIcon,
@@ -31,15 +28,8 @@ import { formatPercent } from "@/lib/utils";
 import {
   curricularUnits,
   enadeCompetencies,
-  getAverageQuestionAccuracy,
-  getCompetencyTitle,
-  getHighRiskUnits,
-  getUnitName,
-  managerMetrics,
   pedagogicalActions,
-  preparationStages,
   questionMappings,
-  studentPreparationPlan,
 } from "./data";
 import type { ActionStatus, Priority, RiskLevel } from "./types";
 
@@ -60,7 +50,7 @@ const priorityVariant: Record<Priority, "neutral" | "warning" | "danger"> = {
 const statusLabel: Record<ActionStatus, string> = {
   planejada: "Planejada",
   em_andamento: "Em andamento",
-  concluida: "Concluída",
+  concluida: "Concluida",
 };
 
 const statusVariant: Record<ActionStatus, "neutral" | "info" | "success"> = {
@@ -69,31 +59,47 @@ const statusVariant: Record<ActionStatus, "neutral" | "info" | "success"> = {
   concluida: "success",
 };
 
+const preparationStages = [
+  {
+    title: "Simulado inicial",
+    description: "Aplicar prova anterior do ENADE para obter diagnostico real por estudante.",
+    status: "Concluido",
+  },
+  {
+    title: "Mapeamento tecnico",
+    description: "Associar questao, objeto de conhecimento, competencia e unidade curricular.",
+    status: "Em andamento",
+  },
+  {
+    title: "Mapa de lacunas",
+    description: "Identificar turmas, UCs e competencias com menor desempenho.",
+    status: "Em andamento",
+  },
+  {
+    title: "Acoes pedagogicas",
+    description: "Planejar oficinas, listas orientadas e revisoes com docentes responsaveis.",
+    status: "Planejado",
+  },
+];
+
 export function ProjectDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>("gestor");
 
   return (
     <main className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <GraduationCap className="h-6 w-6" aria-hidden="true" />
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <GraduationCap className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-muted-foreground">
-                UniSENAI Blumenau
-              </p>
-              <h1 className="truncate text-xl font-semibold tracking-normal sm:text-2xl">
-                Preparatório ENADE 2026 ADS
-              </h1>
+            <div>
+              <h1 className="text-base font-semibold">Preparatorio ENADE 2026</h1>
+              <p className="text-xs text-muted-foreground">UniSENAI Blumenau</p>
             </div>
           </div>
 
-          <div
-            aria-label="Selecionar visão"
-            className="grid grid-cols-2 gap-2 rounded-lg border bg-background p-1"
-          >
+          <div className="grid grid-cols-2 gap-2 rounded-lg border p-1">
             <Button
               aria-pressed={viewMode === "gestor"}
               onClick={() => setViewMode("gestor")}
@@ -116,7 +122,7 @@ export function ProjectDashboard() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6">
         {viewMode === "gestor" ? <ManagerView /> : <StudentView />}
       </div>
     </main>
@@ -124,230 +130,140 @@ export function ProjectDashboard() {
 }
 
 function ManagerView() {
-  const highRiskUnits = useMemo(() => getHighRiskUnits(), []);
-  const averageAccuracy = getAverageQuestionAccuracy();
-
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Users}
-          label="Estudantes elegíveis"
-          tone="text-teal-700"
-          value={managerMetrics.eligibleStudents}
-          helper={managerMetrics.targetCohorts}
-        />
-        <MetricCard
-          icon={ClipboardList}
-          label="Questões mapeadas"
-          tone="text-sky-700"
-          value={managerMetrics.mappedQuestions}
-          helper="Base ENADE anterior"
-        />
-        <MetricCard
-          icon={BarChart3}
-          label="Acerto médio"
-          tone="text-amber-700"
-          value={formatPercent(averageAccuracy)}
-          helper="Simulado diagnóstico"
-        />
-        <MetricCard
-          icon={AlertTriangle}
-          label="Lacunas críticas"
-          tone="text-rose-700"
-          value={highRiskUnits.length}
-          helper="UCs em alto risco"
-        />
+      {/* Metricas */}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard icon={Users} label="Estudantes elegiveis" value={48} helper="3o e 4o semestres" />
+        <MetricCard icon={BarChart3} label="Questoes mapeadas" value={questionMappings.length} helper="Base ENADE" />
+        <MetricCard icon={Target} label="Competencias" value={enadeCompetencies.length} helper="C1 e C2" />
+        <MetricCard icon={AlertTriangle} label="Acoes planejadas" value={pedagogicalActions.length} helper="Pedagogicas" />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[1.45fr_0.85fr]">
+      {/* Plano e competencias */}
+      <section className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Plano de preparação</CardTitle>
-            <CardDescription>
-              Fluxo solicitado no alinhamento inicial para orientar docentes e coordenação.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Plano de preparacao</CardTitle>
+            <CardDescription>Fluxo para orientar docentes e coordenacao</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-4">
-              {preparationStages.map((stage, index) => (
-                <div
-                  className="rounded-lg border bg-background p-4"
-                  key={stage.title}
-                >
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
-                      {index + 1}
-                    </span>
-                    <Badge
-                      variant={
-                        stage.status === "Concluído"
-                          ? "success"
-                          : stage.status === "Em andamento"
-                            ? "info"
-                            : "neutral"
-                      }
-                    >
-                      {stage.status}
-                    </Badge>
-                  </div>
-                  <h3 className="text-sm font-semibold">{stage.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {stage.description}
-                  </p>
+          <CardContent className="grid gap-2 sm:grid-cols-2">
+            {preparationStages.map((stage, index) => (
+              <div className="rounded-lg border p-3" key={stage.title}>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded bg-primary/10 text-xs font-semibold text-primary">
+                    {index + 1}
+                  </span>
+                  <Badge
+                    variant={
+                      stage.status === "Concluido"
+                        ? "success"
+                        : stage.status === "Em andamento"
+                          ? "info"
+                          : "neutral"
+                    }
+                  >
+                    {stage.status}
+                  </Badge>
                 </div>
-              ))}
-            </div>
+                <h3 className="text-sm font-medium">{stage.title}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{stage.description}</p>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Competências ENADE</CardTitle>
-            <CardDescription>
-              Referência inicial do componente específico da Portaria 169/2026.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Competencias ENADE</CardTitle>
+            <CardDescription>Componente especifico da Portaria</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {enadeCompetencies.map((competency) => (
-              <div className="rounded-lg border bg-background p-4" key={competency.id}>
-                <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="rounded-lg border p-3" key={competency.id}>
+                <div className="mb-1 flex items-center gap-2">
                   <Badge variant="info">{competency.id}</Badge>
                   <span className="text-xs text-muted-foreground">
                     {competency.abilities.length} habilidades
                   </span>
                 </div>
-                <h3 className="text-sm font-semibold">{competency.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {competency.description}
-                </p>
+                <h3 className="text-sm font-medium">{competency.title}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">{competency.description}</p>
               </div>
             ))}
           </CardContent>
         </Card>
       </section>
 
-      <section className="space-y-4">
-        <SectionTitle
-          icon={MapPinned}
-          title="Mapa de lacunas por unidade curricular"
-          description="Prioridade calculada a partir de acerto médio e volume de questões associadas."
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      {/* Unidades curriculares */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold">Unidades curriculares</h2>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {curricularUnits.map((unit) => (
-            <Card className="min-h-[210px]" key={unit.code}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
+            <Card key={unit.code}>
+              <CardContent className="p-3">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <Badge variant="neutral">{unit.code}</Badge>
-                  <Badge variant={riskVariant[unit.risk]}>Risco {unit.risk}</Badge>
-                </div>
-                <CardTitle className="text-sm leading-5">{unit.name}</CardTitle>
-                <CardDescription>
-                  {unit.semester}º semestre · {unit.module}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Progress
-                  indicatorClassName={
-                    unit.risk === "alto"
-                      ? "bg-rose-500"
-                      : unit.risk === "medio"
-                        ? "bg-amber-500"
-                        : "bg-emerald-500"
-                  }
-                  label="Acerto"
-                  value={unit.averageAccuracy}
-                />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Questões</span>
-                  <span className="font-semibold">{unit.mappedQuestions}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Competência</span>
                   <Badge variant="info">{unit.competencyId}</Badge>
                 </div>
+                <h3 className="text-sm font-medium">{unit.name}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {unit.semester}o semestre - {unit.workload}h
+                </p>
               </CardContent>
             </Card>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      {/* Questoes e acoes */}
+      <section className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Questões mapeadas</CardTitle>
-            <CardDescription>
-              Amostra do vínculo entre prova anterior, competência e UCs do PPC.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Questoes mapeadas</CardTitle>
+            <CardDescription>Vinculo entre prova, competencia e UCs</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {questionMappings.map((question) => (
-              <div
-                className="grid gap-3 rounded-lg border bg-background p-4 md:grid-cols-[0.35fr_1.25fr_0.5fr]"
-                key={question.id}
-              >
-                <div>
-                  <p className="font-mono text-sm font-semibold">{question.id}</p>
-                  <p className="text-xs text-muted-foreground">{question.type}</p>
+              <div className="rounded-lg border p-3" key={question.id}>
+                <div className="mb-2 flex flex-wrap items-center gap-1">
+                  <Badge variant="neutral">{question.id}</Badge>
+                  <Badge variant={riskVariant[question.difficulty]}>{question.difficulty}</Badge>
+                  <Badge variant="info">{question.competencyId}</Badge>
+                  {question.unitCodes.map((uc) => (
+                    <Badge key={uc} variant="neutral">{uc}</Badge>
+                  ))}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{question.object}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="info">{question.competencyId}</Badge>
-                    {question.unitCodes.map((unitCode) => (
-                      <Badge key={unitCode} variant="neutral">
-                        {unitCode}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Progress
-                    indicatorClassName={
-                      question.difficulty === "alto"
-                        ? "bg-rose-500"
-                        : question.difficulty === "medio"
-                          ? "bg-amber-500"
-                          : "bg-emerald-500"
-                    }
-                    label="Acerto"
-                    value={question.averageAccuracy}
-                  />
-                  <Badge variant={question.status === "mapeada" ? "success" : "warning"}>
-                    {question.status === "mapeada" ? "Mapeada" : "Revisão docente"}
-                  </Badge>
-                </div>
+                <p className="text-sm">{question.object}</p>
               </div>
             ))}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Ações pedagógicas</CardTitle>
-            <CardDescription>
-              Intervenções planejadas para reduzir lacunas ao longo do semestre.
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Acoes pedagogicas</CardTitle>
+            <CardDescription>Intervencoes para reduzir lacunas</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {pedagogicalActions.map((action) => (
-              <div className="rounded-lg border bg-background p-4" key={action.id}>
-                <div className="mb-3 flex flex-wrap items-center gap-2">
+              <div className="rounded-lg border p-3" key={action.id}>
+                <div className="mb-2 flex flex-wrap items-center gap-1">
                   <Badge variant={priorityVariant[action.priority]}>
-                    Prioridade {action.priority}
+                    {action.priority}
                   </Badge>
                   <Badge variant={statusVariant[action.status]}>
                     {statusLabel[action.status]}
                   </Badge>
                 </div>
-                <h3 className="text-sm font-semibold leading-5">{action.title}</h3>
-                <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
-                  <InfoLine icon={Users} text={action.owner} />
-                  <InfoLine icon={CalendarDays} text={action.dueDate} />
-                  <InfoLine
-                    icon={Target}
-                    text={`${action.competencyId} · ${action.unitCodes.join(", ")}`}
-                  />
+                <h3 className="text-sm font-medium">{action.title}</h3>
+                <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" /> {action.owner}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3" /> {action.dueDate}
+                  </span>
                 </div>
               </div>
             ))}
@@ -359,276 +275,62 @@ function ManagerView() {
 }
 
 function StudentView() {
-  const recommendedQuestions = questionMappings.filter((question) =>
-    studentPreparationPlan.recommendedQuestionIds.includes(question.id),
-  );
-
   return (
     <div className="space-y-6">
-      <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <CardTitle>{studentPreparationPlan.studentName}</CardTitle>
-                <CardDescription>{studentPreparationPlan.cohort}</CardDescription>
-              </div>
-              <Badge variant="success">
-                {studentPreparationPlan.courseProgress}% do curso
-              </Badge>
+      <Card>
+        <CardHeader>
+          <CardTitle>Visao do Estudante</CardTitle>
+          <CardDescription>
+            O sistema principal de jornada esta disponivel no PreparatorySystem.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border p-4 text-center">
+              <CheckCircle2 className="mx-auto h-8 w-8 text-emerald-500" />
+              <p className="mt-2 font-medium">Simulado diagnostico</p>
+              <p className="text-xs text-muted-foreground">Concluido</p>
             </div>
-          </CardHeader>
-          <CardContent className="grid gap-5 sm:grid-cols-[150px_1fr]">
-            <div className="flex justify-center">
-              <div
-                aria-label={`Prontidão ${studentPreparationPlan.readiness}%`}
-                className="flex h-36 w-36 items-center justify-center rounded-full"
-                role="img"
-                style={{
-                  background: `conic-gradient(hsl(var(--primary)) ${studentPreparationPlan.readiness}%, hsl(var(--muted)) 0)`,
-                }}
-              >
-                <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-card text-center">
-                  <span className="text-3xl font-semibold">
-                    {studentPreparationPlan.readiness}%
-                  </span>
-                  <span className="text-xs text-muted-foreground">prontidão</span>
-                </div>
-              </div>
+            <div className="rounded-lg border p-4 text-center">
+              <ListChecks className="mx-auto h-8 w-8 text-primary" />
+              <p className="mt-2 font-medium">Revisao por competencia</p>
+              <p className="text-xs text-muted-foreground">Em andamento</p>
             </div>
-            <div className="space-y-4">
-              <Progress
-                label="Acerto médio"
-                value={studentPreparationPlan.averageAccuracy}
-              />
-              <Progress
-                indicatorClassName="bg-sky-600"
-                label="Meta individual"
-                value={studentPreparationPlan.targetAccuracy}
-              />
-              <div className="rounded-lg border bg-background p-4">
-                <p className="text-sm font-semibold">Próximo marco</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  Revisão orientada antes do segundo simulado diagnóstico de junho.
-                </p>
-              </div>
+            <div className="rounded-lg border p-4 text-center">
+              <LineChart className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 font-medium">Novo simulado</p>
+              <p className="text-xs text-muted-foreground">Junho/2026</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Foco da semana</CardTitle>
-            <CardDescription>
-              Atividades conectadas às lacunas do simulado e às competências ENADE.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {studentPreparationPlan.studyTasks.map((task) => (
-              <div
-                className="grid gap-3 rounded-lg border bg-background p-4 sm:grid-cols-[1fr_auto]"
-                key={task.id}
-              >
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant={priorityVariant[task.priority]}>
-                      Prioridade {task.priority}
-                    </Badge>
-                    <Badge variant="info">{task.competencyId}</Badge>
-                    <Badge variant="neutral">{task.unitCode}</Badge>
-                  </div>
-                  <h3 className="text-sm font-semibold leading-5">{task.title}</h3>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                  {task.duration}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Pontos fortes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {studentPreparationPlan.strengths.map((strength) => (
-              <InfoLine icon={CheckCircle2} key={strength} text={strength} />
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Lacunas prioritárias</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {studentPreparationPlan.priorityGaps.map((gap) => (
-              <InfoLine icon={AlertTriangle} key={gap} text={gap} />
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Rota ENADE</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Milestone
-              icon={ClipboardList}
-              label="Simulado diagnóstico"
-              status="Concluído"
-            />
-            <Milestone
-              icon={ListChecks}
-              label="Revisão por competência"
-              status="Em andamento"
-            />
-            <Milestone
-              icon={LineChart}
-              label="Novo simulado"
-              status="Junho/2026"
-            />
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Questões recomendadas</CardTitle>
-            <CardDescription>
-              Revisão priorizada a partir do desempenho individual.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {recommendedQuestions.map((question) => (
-              <div
-                className="rounded-lg border bg-background p-4"
-                key={question.id}
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <Badge variant="neutral">{question.id}</Badge>
-                  <Badge variant={riskVariant[question.difficulty]}>
-                    {question.difficulty}
-                  </Badge>
-                </div>
-                <h3 className="text-sm font-semibold">{question.object}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {getCompetencyTitle(question.competencyId)}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {question.unitCodes.map((unitCode) => (
-                    <Badge key={unitCode} variant="info">
-                      {unitCode}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Unidades relacionadas</CardTitle>
-            <CardDescription>
-              Conteúdos do PPC conectados às revisões recomendadas.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {["EDA", "TRL", "CNU", "DSD", "DSW", "DWE"].map((unitCode) => (
-              <div className="rounded-lg border bg-background p-4" key={unitCode}>
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <Badge variant="neutral">{unitCode}</Badge>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                </div>
-                <p className="text-sm font-medium leading-5">{getUnitName(unitCode)}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-type MetricCardProps = {
+function MetricCard({
+  helper,
+  icon: Icon,
+  label,
+  value,
+}: {
+  helper: string;
   icon: LucideIcon;
   label: string;
   value: number | string;
-  helper: string;
-  tone: string;
-};
-
-function MetricCard({ icon: Icon, label, value, helper, tone }: MetricCardProps) {
+}) {
   return (
     <Card>
-      <CardContent className="flex items-center gap-4 p-5">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-muted">
-          <Icon className={`h-6 w-6 ${tone}`} aria-hidden="true" />
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="truncate text-2xl font-semibold tracking-normal">{value}</p>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="truncate text-xl font-semibold">{value}</p>
           <p className="text-xs text-muted-foreground">{helper}</p>
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-type SectionTitleProps = {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-};
-
-function SectionTitle({ icon: Icon, title, description }: SectionTitleProps) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Icon className="h-5 w-5" aria-hidden="true" />
-      </div>
-      <div>
-        <h2 className="text-lg font-semibold tracking-normal">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
-    </div>
-  );
-}
-
-type InfoLineProps = {
-  icon: LucideIcon;
-  text: string;
-};
-
-function InfoLine({ icon: Icon, text }: InfoLineProps) {
-  return (
-    <div className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
-      <Icon className="mt-1 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-      <span>{text}</span>
-    </div>
-  );
-}
-
-type MilestoneProps = {
-  icon: LucideIcon;
-  label: string;
-  status: string;
-};
-
-function Milestone({ icon: Icon, label, status }: MilestoneProps) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border bg-background p-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        <span className="truncate text-sm font-medium">{label}</span>
-      </div>
-      <Badge variant={status === "Concluído" ? "success" : "info"}>{status}</Badge>
-    </div>
   );
 }
