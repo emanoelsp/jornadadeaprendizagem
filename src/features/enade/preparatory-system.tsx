@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FirebaseError } from "firebase/app";
 import {
   AlertTriangle,
   ArrowRight,
@@ -294,6 +295,11 @@ function LoginScreen({
         className: role === "aluno" ? selectedClass : undefined,
       });
     } catch (error) {
+      if (error instanceof FirebaseError) {
+        setMessage(`${error.message} (${error.code})`);
+        return;
+      }
+
       setMessage(error instanceof Error ? error.message : "Erro no login Google.");
     } finally {
       setIsSubmitting(false);
