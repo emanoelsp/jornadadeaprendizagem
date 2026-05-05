@@ -183,6 +183,7 @@ export type ExamQuestionAnalysis = {
   dispersionRate: number;
   strategicRisk: RiskLevel;
   insight: string;
+  pageNumber?: number;
 };
 
 export type ExamInsight = {
