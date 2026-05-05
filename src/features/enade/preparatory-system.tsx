@@ -61,6 +61,7 @@ import {
 } from "./analytics";
 import { questionBank } from "./data";
 import { examQuestionsToQuestionBankItems } from "./exam-parser";
+import { QuestionImageViewer } from "./question-image-viewer";
 import { parseAssessmentSpreadsheet } from "./upload-parser";
 import type {
   AssessmentResponse,
@@ -1027,6 +1028,7 @@ function ProvasPanel({
                   key={q.id}
                   question={q}
                   onSelect={() => onSelectQuestion(q.id)}
+                  blobUrl={selectedExam.blobUrl}
                 />
               ))}
             </div>
@@ -1040,9 +1042,11 @@ function ProvasPanel({
 function QuestionResultCard({
   question,
   onSelect,
+  blobUrl,
 }: {
   question: ExamQuestionAnalysis;
   onSelect: () => void;
+  blobUrl?: string;
 }) {
   return (
     <div className="rounded-lg border p-4">
@@ -1060,9 +1064,16 @@ function QuestionResultCard({
             <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{question.prompt}</p>
           )}
         </div>
-        <Button size="sm" variant="outline" onClick={onSelect}>
-          Usar na jornada
-        </Button>
+        <div className="flex items-center gap-2">
+          <QuestionImageViewer
+            blobUrl={blobUrl}
+            pageNumber={question.pageNumber ?? parseInt(question.number, 10)}
+            questionTitle={question.title}
+          />
+          <Button size="sm" variant="outline" onClick={onSelect}>
+            Usar na jornada
+          </Button>
+        </div>
       </div>
 
       {/* Distribuicao das alternativas */}
