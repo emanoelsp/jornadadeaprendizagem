@@ -37,17 +37,8 @@ export function QuestionImageViewer({
       setError(null);
 
       try {
-        // Buscar URL de download do blob
-        const response = await fetch(`/api/provas/blob-url?url=${encodeURIComponent(blobUrl)}`);
-        
-        if (!response.ok) {
-          throw new Error("Erro ao obter URL do PDF");
-        }
-
-        const { downloadUrl } = await response.json();
-        
-        // Carregar o PDF
-        const loadingTask = pdfjsLib.getDocument(downloadUrl);
+        // Carregar o PDF diretamente da URL do Vercel Blob
+        const loadingTask = pdfjsLib.getDocument(blobUrl);
         const pdf = await loadingTask.promise;
         pdfDocRef.current = pdf;
         setPdfTotalPages(pdf.numPages);
