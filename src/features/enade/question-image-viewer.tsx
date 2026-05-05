@@ -87,6 +87,7 @@ export function QuestionImageViewer({
       await page.render({
         canvasContext: context,
         viewport,
+        canvas,
       }).promise;
     } catch (err) {
       console.error("[v0] Erro ao renderizar pagina:", err);
